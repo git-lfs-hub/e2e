@@ -20,7 +20,6 @@ jobs:
       cancel-in-progress: false
     env:
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: staging
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
 
     steps:
       - uses: actions/checkout@v6
