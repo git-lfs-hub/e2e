@@ -42,7 +42,7 @@ jobs:
 
       - name: Test staging
         run: bun --bun run staging-test
-        working-directory: staging
+        working-directory: e2e
         env:
           GH_PAT: ${{ secrets.GLH_STAGING_GITHUB_PAT }}
           LOGIN_SECRET: ${{ secrets.GLH_STAGING_LOGIN_SECRET }}
