@@ -14,7 +14,7 @@ Consumed by [`git-lfs-hub/deploy`](https://github.com/git-lfs-hub/deploy):
 | Job | What |
 |-----|------|
 | `deploy` | checks out caller repo at PR head SHA, renders staging vars, sanity-checks Worker name, deploys via `wrangler` |
-| `test` (needs `deploy`) | runs `docs-test.sh` (Tier 2) + `lfs-push-test.sh` against the deployed staging Worker |
+| `test` (needs `deploy`) | runs `test-docs.sh` (Tier 2) + `test-git-lfs.sh` against the deployed staging Worker |
 
 Both jobs share concurrency group `lfs-server-staging` (queue-depth 1) because they share one Worker resource.
 
@@ -49,16 +49,16 @@ staging:
 Checkout uses `repository: ${{ github.repository }}` — the caller. Then expects:
 
 - `./.github/actions/init` — installs Bun, renders config artifacts via `bun turbo '//#config'`
-- `staging/` submodule — provides `docs-test.sh`, `lfs-push-test.sh`, `mint-session-cookie.ts`
+- `staging/` submodule — provides `test-docs.sh`, `test-git-lfs.sh`, `session-cookie.ts`
 - `server/` submodule — provides `server/wrangler.template.jsonc` and source for `wrangler deploy`
 
 ## Scripts
 
 | File | Run by | What it does |
 |------|--------|---------------|
-| `mint-session-cookie.ts` | `docs-test.sh` | Encrypts `{ token: GH_PAT }` with `LOGIN_SECRET` → `gh_session_v2` cookie value |
-| `docs-test.sh` | `staging.yml` `test` job | Tier 2: authenticated HTML + assets + unauth 302 redirect |
-| `lfs-push-test.sh` | same | Real `git lfs push` against staging Worker to `git-lfs-hub/test` repo |
+| `session-cookie.ts` | `test-docs.sh` | Encrypts `{ token: GH_PAT }` with `LOGIN_SECRET` → `gh_session_v2` cookie value |
+| `test-docs.sh` | `staging.yml` `test` job | Tier 2: authenticated HTML + assets + unauth 302 redirect |
+| `test-git-lfs.sh` | same | Real `git lfs push` against staging Worker to `git-lfs-hub/test` repo |
 
 ### Required environment (set by `staging.yml`)
 
@@ -67,8 +67,8 @@ Scripts read `STAGING_URL`, `DOCS_TITLE`, `LFS_URL`, `STAGING_HOST` directly fro
 | Variable | Used by | Source |
 |----------|---------|--------|
 | `GH_PAT` | both | caller's `GLH_STAGING_GITHUB_PAT` |
-| `LOGIN_SECRET` | `docs-test.sh` | caller's `GLH_STAGING_LOGIN_SECRET` |
-| `PR_NUMBER`, `RUN_ID` | `lfs-push-test.sh` | `github.event.pull_request.number`, `github.run_id` |
+| `LOGIN_SECRET` | `test-docs.sh` | caller's `GLH_STAGING_LOGIN_SECRET` |
+| `PR_NUMBER`, `RUN_ID` | `test-git-lfs.sh` | `github.event.pull_request.number`, `github.run_id` |
 
 ### Local smoke run
 
@@ -78,15 +78,15 @@ From a `deploy` checkout with rendered staging `vars.json` (run `staging.yml`'s 
 export GH_PAT=ghp_...
 export LOGIN_SECRET=<64-hex>
 
-./staging/docs-test.sh
+./staging/test-docs.sh
 
 export PR_NUMBER=local
 export RUN_ID=$(date +%s)
-./staging/lfs-push-test.sh
+./staging/test-git-lfs.sh
 ```
 
 ## Cross-repo import
 
-`mint-session-cookie.ts` imports `encryptCode` from `../server/src/login/utils.ts` (the `server` submodule in `deploy`). It runs under Bun on a CI runner; `utils.ts` only depends on `jose`, no Workers runtime needed.
+`session-cookie.ts` imports `encryptCode` from `../server/src/login/utils.ts` (the `server` submodule in `deploy`). It runs under Bun on a CI runner; `utils.ts` only depends on `jose`, no Workers runtime needed.
 
 If `server/src/login/utils.ts` is moved or its `encryptCode` signature changes, this script must be updated in lockstep.

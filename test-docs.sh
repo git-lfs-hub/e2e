@@ -14,7 +14,7 @@ step() { printf '\n› %s\n' "$1"; }
 printf 'STAGING_URL=%s\nDOCS_TITLE=%s\n' "$STAGING_URL" "$DOCS_TITLE"
 
 step "Mint session cookie"
-COOKIE="$(bun staging/mint-session-cookie.ts)" || fail "mint-session-cookie.ts failed"
+COOKIE="$(bun staging/session-cookie.ts)" || fail "session-cookie.ts failed"
 [ -n "$COOKIE" ] || fail "empty cookie"
 AUTH_HEADER="Cookie: gh_session_v2=${COOKIE}"
 pass "cookie minted (${#COOKIE} bytes)"

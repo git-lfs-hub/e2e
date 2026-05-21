@@ -84,8 +84,8 @@ jobs:
 
       - uses: ./.github/actions/init
 
-      - name: Docs staging test (Tier 2)
-        run: ./staging/docs-test.sh
+      - name: Test docs
+        run: ./staging/test-docs.sh
         env:
           GH_PAT: ${{ secrets.GLH_STAGING_GITHUB_PAT }}
           LOGIN_SECRET: ${{ secrets.GLH_STAGING_LOGIN_SECRET }}
@@ -93,8 +93,8 @@ jobs:
       - name: Install git-lfs
         run: sudo apt-get update && sudo apt-get install -y git-lfs
 
-      - name: LFS push staging test
-        run: ./staging/lfs-push-test.sh
+      - name: Test git lfs
+        run: ./staging/test-git-lfs.sh
         env:
           GH_PAT: ${{ secrets.GLH_STAGING_GITHUB_PAT }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
