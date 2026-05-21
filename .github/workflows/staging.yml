@@ -12,8 +12,8 @@ on:
           and s3.bucket — no separate staging vars JSON needed.
 
 jobs:
-  deploy:
-    name: Deploy
+  staging:
+    name: Deploy + test
     runs-on: ubuntu-latest
     concurrency:
       group: lfs-server-staging
@@ -28,62 +28,14 @@ jobs:
           submodules: recursive
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Build staging vars (append -staging suffix)
-        env:
-          INPUT_VARS_JSON: ${{ inputs.vars-json }}
-        run: |
-          rm -f vars.input.json vars.json wrangler.jsonc github-app.md
-          printf '%s\n' "$INPUT_VARS_JSON" | jq '
-            .cloudflare.workerName = ((.cloudflare.workerName // "lfs-server") + "-staging") |
-            .s3.bucket             = ((.s3.bucket             // "lfs-objects") + "-staging")
-          ' > vars.input.json
+      - uses: ./staging/.github/actions/init-staging
+        with:
+          vars-json: ${{ inputs.vars-json }}
 
-      - uses: ./.github/actions/init
-
-      - name: Sanity-check rendered Worker name
-        run: |
-          var_name="$(jq -r '.cloudflare.workerName' vars.json)"
-          wrangler_name="$(bun -e 'process.stdout.write((await import("./wrangler.jsonc")).default.name)')"
-          if [ "$var_name" != "$wrangler_name" ] || [[ "$var_name" != *-staging ]]; then
-            echo "::error::workerName mismatch or missing -staging suffix: vars.json='$var_name' wrangler.jsonc='$wrangler_name'"
-            exit 1
-          fi
-
-      - run: bunx turbo run build --force
-
-      - run: bunx wrangler deploy --minify
-        working-directory: server
+      - name: Deploy staging Worker
+        run: bunx turbo run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-  test:
-    name: Test
-    needs: deploy
-    runs-on: ubuntu-latest
-    concurrency:
-      group: lfs-server-staging
-      cancel-in-progress: false
-    env:
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY: staging
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          repository: ${{ github.repository }}
-          submodules: recursive
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Build staging vars (append -staging suffix)
-        env:
-          INPUT_VARS_JSON: ${{ inputs.vars-json }}
-        run: |
-          rm -f vars.input.json vars.json wrangler.jsonc github-app.md
-          printf '%s\n' "$INPUT_VARS_JSON" | jq '
-            .cloudflare.workerName = ((.cloudflare.workerName // "lfs-server") + "-staging") |
-            .s3.bucket             = ((.s3.bucket             // "lfs-objects") + "-staging")
-          ' > vars.input.json
-
-      - uses: ./.github/actions/init
 
       - name: Install git-lfs
         run: sudo apt-get update && sudo apt-get install -y git-lfs
