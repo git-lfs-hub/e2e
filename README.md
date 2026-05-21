@@ -1,11 +1,11 @@
-# git-lfs-hub/staging
+# git-lfs-hub/e2e
 
-Reusable workflow + scripts that deploy and test a `lfs-server-staging` Worker.
+Reusable workflow + scripts that deploy and test a `lfs-server-staging` Worker. Also runs as a post-deploy smoke against the production Worker from `deploy/.github/workflows/main.yml`.
 
 Consumed by [`git-lfs-hub/deploy`](https://github.com/git-lfs-hub/deploy):
 
-- as a **git submodule** at `deploy/staging/` — gives test scripts to CI runners
-- as a **reusable workflow** at `git-lfs-hub/staging/.github/workflows/staging.yml@<ref>` — invoked from `deploy/.github/workflows/pr.yml`
+- as a **git submodule** at `deploy/e2e/` — gives test scripts to CI runners
+- as a **reusable workflow** at `git-lfs-hub/e2e/.github/workflows/staging.yml@<ref>` — invoked from `deploy/.github/workflows/pr.yml`
 
 ## Reusable workflow
 
@@ -36,7 +36,7 @@ The workflow takes one input — the caller's existing `GLH_VARS_JSON` — and d
 staging:
   needs: test
   if: github.event.pull_request.head.repo.full_name == github.repository
-  uses: git-lfs-hub/staging/.github/workflows/staging.yml@main
+  uses: git-lfs-hub/e2e/.github/workflows/staging.yml@main
   with:
     vars-json: ${{ vars.GLH_VARS_JSON || secrets.GLH_VARS_JSON }}
   secrets: inherit
@@ -49,7 +49,7 @@ staging:
 Checkout uses `repository: ${{ github.repository }}` — the caller. Then expects:
 
 - `./.github/actions/init` — installs Bun, renders config artifacts via `bun turbo '//#config'`
-- `staging/` submodule — provides `test-docs.sh`, `test-git-lfs.sh`, `session-cookie.ts`
+- `e2e/` submodule — provides `test-docs.sh`, `test-git-lfs.sh`, `session-cookie.ts`
 - `server/` submodule — provides `server/wrangler.template.jsonc` and source for `wrangler deploy`
 
 ## Tests (vitest)
@@ -60,17 +60,17 @@ Checkout uses `repository: ${{ github.repository }}` — the caller. Then expect
 | `test-git-lfs.test.ts` | Real `git lfs push` against staging Worker to `git-lfs-hub/test` repo |
 | `lib.ts` | Shared: typed `vars.json` loader (absolute path), `requireEnv` |
 
-Run from `staging/` cwd:
+Run from `e2e/` cwd:
 
 ```sh
-bun run test     # bunx vitest run --reporter=github-actions
+bun run e2e-test
 ```
 
-Caller workflow uses `working-directory: staging` + `bun run test`. Tests pull `STAGING_URL`, `DOCS_TITLE`, `LFS_URL` from `../vars.json` (deploy root) via `lib.vars`.
+Caller workflow uses `working-directory: e2e` + `bun run e2e-test`. Tests pull `STAGING_URL`, `DOCS_TITLE`, `LFS_URL` from `../vars.json` (deploy root) via `lib.vars`.
 
-### Caller-side `staging` workspace
+### Caller-side `e2e` workspace
 
-Staging is registered as a `bun` workspace in `deploy/package.json`, so root `bun install --frozen-lockfile` installs vitest into `staging/node_modules`. Fork users must add `"staging"` to their `package.json` `workspaces` array.
+The harness is registered as a `bun` workspace in `deploy/package.json`, so root `bun install --frozen-lockfile` installs vitest into `e2e/node_modules`. Fork users must add `"e2e"` to their `package.json` `workspaces` array.
 
 ### Required environment (set by `staging.yml`)
 
@@ -92,8 +92,8 @@ export LOGIN_SECRET=<64-hex>
 export PR_NUMBER=local
 export RUN_ID=$(date +%s)
 
-cd staging
-bun run test
+cd e2e
+bun run e2e-test
 ```
 
 ## Cross-repo import

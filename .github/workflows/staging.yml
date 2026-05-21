@@ -28,7 +28,7 @@ jobs:
           submodules: recursive
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - uses: ./staging/.github/actions/init-staging
+      - uses: ./e2e/.github/actions/init-staging
         with:
           vars-json: ${{ inputs.vars-json }}
 
@@ -41,8 +41,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y git-lfs
 
       - name: Test staging
-        run: bun --bun run staging-test
-        working-directory: staging
+        run: bun --bun run e2e-test
+        working-directory: e2e
         env:
           GH_PAT: ${{ secrets.GLH_STAGING_GITHUB_PAT }}
           LOGIN_SECRET: ${{ secrets.GLH_STAGING_LOGIN_SECRET }}
