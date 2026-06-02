@@ -24,7 +24,7 @@ Tests throw on missing env via `lib.requireEnv` — fail loudly at module load.
 - **`GH_PAT`** — both tests. Write on the `TEST_REPO`; org-mode requires `read:org`.
 - **`LOGIN_SECRET`** — `test-docs`. Must match the `LOGIN_SECRET` Worker secret.
 - **`PR_NUMBER`**, **`RUN_ID`** — `test-git-lfs`; build the branch name + filename.
-- **`TEST_REPO`** — `test-git-lfs`; `owner/repo` to clone and push against. From the caller's `GLH_E2E_TEST_REPO` repo variable.
+- **`TEST_REPO`** — `test-git-lfs`; `owner/repo` to clone and push against. From the caller's `GLH_TEST_REPO` repo variable.
 
 ## Caller-side `e2e` workspace
 
@@ -67,7 +67,7 @@ Runs the vitest suite against an already-deployed Worker. Verifies the test logi
 Verifies the full `test-repo` input threading through the reusable workflows (which step 1 can't). `pr.yml`/`main.yml` pin `uses: git-lfs-hub/ci-cd/...@main`, so CI always pulls `ci-cd` **main** — the new plumbing can't run until merged. To exercise an unmerged `ci-cd` branch:
 
 1. On a test/fork deploy repo, change the `@main` refs to `@<your-ci-cd-branch>`.
-2. Set the repo variable `GLH_E2E_TEST_REPO`.
+2. Set the repo variable `GLH_TEST_REPO`.
 3. Trigger via `workflow_dispatch` — a real GitHub run against that branch.
 4. Revert the pin.
 
