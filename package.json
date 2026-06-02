@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "compile": "tsgo --noEmit -p tsconfig.json",
+    "test": "GH_PAT=$(gh auth token) RUN_ID=$(date +%s) bun e2e-test",
     "e2e-test": "bunx --bun vitest run --reporter=verbose --reporter=github-actions",
     "e2e-test:watch": "bunx --bun vitest watch"
   },
