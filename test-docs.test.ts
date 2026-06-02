@@ -10,7 +10,7 @@ describe("e2e docs", () => {
   let Cookie: string;
 
   beforeAll(async () => {
-    const cookieValue = await encryptSession({ token: GH_PAT }, LOGIN_SECRET, 86400);
+    const cookieValue = await encryptSession({ access: GH_PAT }, LOGIN_SECRET, 86400);
     expect(cookieValue, "encryptSession returned empty").toBeTruthy();
     Cookie = `gh_session_v2=${cookieValue}`;
   });
