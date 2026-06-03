@@ -5,24 +5,57 @@ on:
   push: { branches: ["main"] }
   workflow_dispatch: # Can run manually from the Actions tab
 
-permissions: {}
+permissions: { contents: read }
 
 jobs:
-  audit:
-    name: Audit
+  test:
+    name: Test
     runs-on: ubuntu-latest
 
+    # Serialize e2e runs in this repo.
+    concurrency:
+      group: staging
+      cancel-in-progress: false
+
+    # Required repo config:
+    #   vars.GLH_TEST_REPO                — owner/repo to push LFS objects to
+    #   vars.GLH_STAGING_SERVER           — test Worker host, e.g. lfs-server-staging.<slug>.workers.dev
+    #                                       Worker deployed by git-lfs-hub/deploy PRs
+    #   secrets.GLH_STAGING_GITHUB_PAT    — GH_PAT: write on TEST_REPO, read:org
+    #   secrets.GLH_STAGING_LOGIN_SECRET  — LOGIN_SECRET matching the staging Worker
     steps:
       - uses: actions/checkout@v4
 
       - uses: git-lfs-hub/ci-cd/actions/init@main
         with: { peers: lib }
 
+      - run: bun compile
+
+      # Minimal vars.json — tests only read title + lfs.server.
+      - name: Write vars.json
+        shell: bash
+        env:
+          GLH_STAGING_SERVER: ${{ vars.GLH_STAGING_SERVER }}
+        run: |
+          test -n "$GLH_STAGING_SERVER" || { echo "::error::repo GLH_STAGING_SERVER var is not set"; exit 1; }
+          cat > vars.json <<EOF
+          { "lfs": { "server": "$GLH_STAGING_SERVER" } }
+          EOF
+
+      - name: Test
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GLH_STAGING_GITHUB_PAT }}
+          LOGIN_SECRET: ${{ secrets.GLH_STAGING_LOGIN_SECRET }}
+          PR_NUMBER: ${{ github.event.pull_request.number || 'main' }}
+          RUN_ID: ${{ github.run_id }}
+          TEST_REPO: ${{ vars.GLH_TEST_REPO }}
+        run: bun --bun run e2e-test
+
       - run: bun audit --audit-level=high
 
   can-merge:
     name: Can merge
     runs-on: ubuntu-latest
-    permissions: { contents: read }
     steps:
       - uses: git-lfs-hub/ci-cd/actions/check-can-merge@main

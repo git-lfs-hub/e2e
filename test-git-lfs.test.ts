@@ -2,9 +2,9 @@ import { describe, test, expect, beforeAll } from "vitest";
 import { $ } from "bun";
 import { vars, requireEnv } from "./lib";
 
-const { GH_PAT, PR_NUMBER, RUN_ID } = requireEnv("GH_PAT", "PR_NUMBER", "RUN_ID");
+const { GH_PAT, PR_NUMBER, RUN_ID, TEST_REPO } = requireEnv("GH_PAT", "PR_NUMBER", "RUN_ID", "TEST_REPO");
 const HOST = vars.lfs.server;
-const LFS_URL = `https://${HOST}/git-lfs-hub/test`;
+const LFS_URL = `https://${HOST}/${TEST_REPO}`;
 const BRANCH = `ci/pr-${PR_NUMBER}-${RUN_ID}`;
 const FILE = `ci-${RUN_ID}.bin`;
 const COMMIT_MSG = `ci: e2e test PR #${PR_NUMBER} run ${RUN_ID}`;
@@ -13,7 +13,7 @@ const CRED_HELPER = '!f() { echo "username=x-access-token"; echo "password=$GH_P
 describe("e2e LFS push", () => {
   beforeAll(async () => {
     await $`git lfs install`.quiet();
-    await $`git clone --quiet https://x-access-token:${GH_PAT}@github.com/git-lfs-hub/test.git test-repo`
+    await $`git clone --quiet https://x-access-token:${GH_PAT}@github.com/${TEST_REPO}.git test-repo`
       .env({ ...process.env, GIT_LFS_SKIP_SMUDGE: "1" });
     $.cwd("test-repo");
     await $`git config lfs.url ${LFS_URL}`;

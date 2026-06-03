@@ -53,51 +53,9 @@ Checkout uses `repository: ${{ github.repository }}` — the caller. Then expect
 - `e2e/` submodule — provides `test-docs.test.ts`, `test-git-lfs.test.ts`, `lib.ts`
 - `server/` submodule — provides `server/wrangler.template.jsonc` and source for `wrangler deploy`
 
-## Tests (vitest)
+## Tests
 
-- **`test-docs.test.ts`** — Tier 2: authenticated HTML + assets + unauth 302 redirect.
-- **`test-git-lfs.test.ts`** — Real `git lfs push` against staging Worker to `git-lfs-hub/test` repo.
-- **`lib.ts`** — Shared: typed `vars.json` loader (absolute path), `requireEnv`.
-
-Run from `e2e/` cwd:
-
-```sh
-bun run e2e-test
-```
-
-Caller workflow uses `working-directory: e2e` + `bun run e2e-test`. Tests pull `STAGING_URL`, `DOCS_TITLE`, `LFS_URL` from `../vars.json` (deploy root) via `lib.vars`.
-
-### Caller-side `e2e` workspace
-
-The harness is registered as a `bun` workspace in `deploy/package.json`, so root `bun install --frozen-lockfile` installs vitest into `e2e/node_modules`. Fork users must add `"e2e"` to their `package.json` `workspaces` array.
-
-### Required environment (set by `staging.yml`)
-
-- **`GH_PAT`** — both tests; from caller's `GLH_STAGING_GITHUB_PAT`.
-- **`LOGIN_SECRET`** — `test-docs`; from caller's `GLH_STAGING_LOGIN_SECRET`.
-- **`PR_NUMBER`**, **`RUN_ID`** — `test-git-lfs`; from `github.event.pull_request.number`, `github.run_id`.
-
-Tests throw on missing env via `lib.requireEnv` — fail loudly at module load.
-
-### Local smoke run
-
-From a `deploy` checkout with rendered staging `vars.json`:
-
-```sh
-export GH_PAT=ghp_...
-export LOGIN_SECRET=<64-hex>
-export PR_NUMBER=local
-export RUN_ID=$(date +%s)
-
-cd e2e
-bun run e2e-test
-```
-
-## Cross-repo import
-
-`test-docs.test.ts` imports `encryptSession` from `@git-lfs-hub/lib/auth/session` (the `lib` workspace in `deploy`). The lib package only depends on `jose`, `hono`, and `@octokit/rest`, no Workers runtime needed — runs in vitest's default node environment.
-
-If `@git-lfs-hub/lib`'s `encryptSession` signature changes, `test-docs.test.ts` must be updated in lockstep.
+The vitest suite (`test-docs`, `test-git-lfs`), required environment, local runs, and how to verify changes before they ship are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 [ci-badge]: https://badgen.net/github/checks/git-lfs-hub/e2e/main?icon=bun&label=CI
 [gh-wf-href]: https://github.com/git-lfs-hub/e2e/actions/workflows/main.yml?query=branch%3Amain

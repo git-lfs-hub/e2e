@@ -4,13 +4,13 @@ import { vars, requireEnv } from "./lib";
 
 const { GH_PAT, LOGIN_SECRET } = requireEnv("GH_PAT", "LOGIN_SECRET");
 const BASE_URL = `https://${vars.lfs.server}`;
-const DOCS_TITLE = vars.title;
+const MARKER = "Version-controlled assets for our whole team";
 
 describe("e2e docs", () => {
   let Cookie: string;
 
   beforeAll(async () => {
-    const cookieValue = await encryptSession({ token: GH_PAT }, LOGIN_SECRET, 86400);
+    const cookieValue = await encryptSession({ access: GH_PAT }, LOGIN_SECRET, 86400);
     expect(cookieValue, "encryptSession returned empty").toBeTruthy();
     Cookie = `gh_session_v2=${cookieValue}`;
   });
@@ -23,10 +23,10 @@ describe("e2e docs", () => {
     return { status: r.status, body: await r.text() };
   }
 
-  test(`GET / with session → 200 + contains '${DOCS_TITLE}'`, async () => {
+  test(`GET / with session → 200 + contains '${MARKER}'`, async () => {
     const { status, body } = await get("/", true);
     expect(status, body.split("\n").slice(0, 50).join("\n")).toBe(200);
-    expect(body).toContain(DOCS_TITLE);
+    expect(body).toContain(MARKER);
   });
 
   test.each(["/tools/git-lfs/", "/assets/css/docmd-main.css"])(
