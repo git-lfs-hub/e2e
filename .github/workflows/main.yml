@@ -39,7 +39,7 @@ jobs:
         run: |
           test -n "$GLH_STAGING_SERVER" || { echo "::error::repo GLH_STAGING_SERVER var is not set"; exit 1; }
           cat > vars.json <<EOF
-          { "title": "Git LFS Hub Hub", "lfs": { "server": "$GLH_STAGING_SERVER" } }
+          { "lfs": { "server": "$GLH_STAGING_SERVER" } }
           EOF
 
       - name: Test
