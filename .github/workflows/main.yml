@@ -29,7 +29,9 @@ jobs:
       - uses: git-lfs-hub/ci-cd/actions/init@main
         with: { peers: lib }
 
-      - run: bun compile
+      - run: bun run compile
+
+      - run: bun run lint
 
       # Minimal vars.json — tests only read title + lfs.server.
       - name: Write vars.json
