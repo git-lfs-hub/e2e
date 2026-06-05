@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "compile": "tsgo --noEmit -p tsconfig.json",
+    "lint": "oxlint .",
     "test-local": "GH_PAT=$(gh auth token) RUN_ID=$(date +%s) bun e2e-test",
     "e2e-test": "bunx --bun vitest run --reporter=verbose --reporter=github-actions",
     "e2e-test:watch": "bunx --bun vitest watch"
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@types/bun": "^1.3.13",
     "@typescript/native-preview": "^7.0.0-dev.20260602.1",
+    "oxlint": "^1.68.0",
     "vitest": "^4.1.7"
   }
 }
