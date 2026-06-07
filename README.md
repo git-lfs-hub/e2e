@@ -59,12 +59,9 @@ The vitest suite (`test-docs`, `test-git-lfs`), required environment, local runs
 
 [ci-badge]: https://badgen.net/github/checks/git-lfs-hub/e2e/main?icon=bun&label=CI
 [gh-wf-href]: https://github.com/git-lfs-hub/e2e/actions/workflows/main.yml?query=branch%3Amain
-
 [codeql-badge]: https://github.com/git-lfs-hub/e2e/actions/workflows/github-code-scanning/codeql/badge.svg
 [codeql-href]: https://github.com/git-lfs-hub/e2e/actions/workflows/github-code-scanning/codeql?query=branch%3Amain
-
 [socket-badge]: https://badgen.net/static/Socket/report/blue?icon=socket
 [socket-href]: https://socket.dev/dashboard/org/git-lfs-hub/repo/@git-lfs-hub/e2e
-
 [license-badge]: https://badgen.net/github/license/git-lfs-hub/e2e
 [license-href]: LICENSE.md

@@ -3,11 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "compile": "tsgo --noEmit -p tsconfig.json",
+    "compile": "tsgo --noEmit",
     "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "check": "bun run compile && bun run lint && bun run format:check",
+    "vitest": "bun run check && bunx --bun vitest",
     "test-local": "GH_PAT=$(gh auth token) RUN_ID=$(date +%s) bun e2e-test",
-    "e2e-test": "bunx --bun vitest run --reporter=verbose --reporter=github-actions",
-    "e2e-test:watch": "bunx --bun vitest watch"
+    "e2e-test": "bun run vitest run --reporter=verbose --reporter=github-actions",
+    "e2e-test:watch": "bun run vitest watch"
   },
   "packageManager": "bun@1.3.14",
   "engines": {
@@ -18,7 +23,8 @@
   },
   "devDependencies": {
     "@types/bun": "^1.3.13",
-    "@typescript/native-preview": "^7.0.0-dev.20260605.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260606.1",
+    "oxfmt": "^0.53.0",
     "oxlint": "^1.68.0",
     "vitest": "^4.1.8"
   }
