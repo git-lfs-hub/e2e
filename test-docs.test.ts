@@ -1,5 +1,6 @@
-import { encryptSession } from '@git-lfs-hub/lib/auth/session';
 import { describe, test, expect, beforeAll } from 'vitest';
+
+import { encryptSession } from '@git-lfs-hub/lib/auth/session';
 
 import { vars, requireEnv } from './lib';
 
