@@ -22,7 +22,8 @@ Caller workflow uses `working-directory: e2e` + `bun run e2e-test`. Tests pull `
 Tests throw on missing env via `lib.requireEnv` — fail loudly at module load.
 
 - **`GH_PAT`** — both tests. Write on the `TEST_REPO`; org-mode requires `read:org`.
-- **`LOGIN_SECRET`** — `test-docs`. Must match the `LOGIN_SECRET` Worker secret.
+- **`LOGIN_SECRET`** — `test-docs`. Must match the `LOGIN_SECRET` Worker secret on `lfs-server`.
+- **`ADMIN_LOGIN_SECRET`** — `test-admin`. Must match the `LOGIN_SECRET` Worker secret on `lfs-admin` (different value from the lfs-server secret).
 - **`PR_NUMBER`**, **`RUN_ID`** — `test-git-lfs`; build the branch name + filename.
 - **`TEST_REPO`** — `test-git-lfs`; `owner/repo` to clone and push against. From the caller's `GLH_TEST_REPO` repo variable.
 
@@ -48,16 +49,17 @@ Runs the vitest suite against an already-deployed Worker. Verifies the test logi
 - Recommended: set `GH_ENV=dev` to test against the `lfs-server-dev` worker.
 
 1. **Render vars.json.** `vars.json` is rendered by `turbo config` from `vars.input.json` (e.g. `lfs-server.<accountSlug>.workers.dev`). To retarget, edit `vars.input.json` and re-run `turbo config`.
-2. **Get a `LOGIN_SECRET`**: same as you passed for the `wrangler secret put LOGIN_SECRET`. Reuse `GLH_LOGIN_SECRET` (prod) / `GLH_STAGING_LOGIN_SECRET` (staging). To skip it, run only the LFS test (step 5, with the filter).
+2. **Get the login secrets**: `LOGIN_SECRET` is what you passed for `wrangler secret put LOGIN_SECRET` on `lfs-server`; `ADMIN_LOGIN_SECRET` is the same for `lfs-admin` (different value). Reuse `GLH_LOGIN_SECRET` / `GLH_ADMIN_LOGIN_SECRET` (prod) / `GLH_STAGING_LOGIN_SECRET` / `GLH_STAGING_ADMIN_LOGIN_SECRET` (staging). To skip them, run only the LFS test (step 5, with the filter).
 3. **Run from `e2e/`:**
    ```sh
    cd e2e
    PR_NUMBER=local \
    TEST_REPO=git-lfs-hub/test \
    LOGIN_SECRET=<64-hex> \
+   ADMIN_LOGIN_SECRET=<64-hex> \
    GH_PAT=$(gh auth token) \
    RUN_ID=$(date +%s) \
-   bun e2e-test          # whole suite; needs LOGIN_SECRET
+   bun e2e-test          # whole suite; needs LOGIN_SECRET + ADMIN_LOGIN_SECRET
    bun --bun run e2e-test test-git-lfs # or, LFS test only (runs w/o LOGIN_SECRET):
    ```
    `TEST_REPO` is the `owner/repo` to push against — swap it to confirm the param flows end-to-end. `PR_NUMBER`/`RUN_ID` only build the branch name (`ci/pr-local-<ts>`) and filename. The test clones the repo, commits an LFS file, and pushes a branch to the Worker.

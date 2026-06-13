@@ -4,14 +4,14 @@ import { encryptSession } from '@git-lfs-hub/lib/auth/session';
 
 import { vars, requireEnv } from './lib';
 
-const { GH_PAT, LOGIN_SECRET } = requireEnv('GH_PAT', 'LOGIN_SECRET');
+const { GH_PAT, ADMIN_LOGIN_SECRET } = requireEnv('GH_PAT', 'ADMIN_LOGIN_SECRET');
 const BASE_URL = `https://${new URL(vars.github.adminHome).host}`;
 
 describe('e2e admin', () => {
   let Cookie: string;
 
   beforeAll(async () => {
-    const cookieValue = await encryptSession({ access: GH_PAT }, LOGIN_SECRET, 86400);
+    const cookieValue = await encryptSession({ access: GH_PAT }, ADMIN_LOGIN_SECRET, 86400);
     expect(cookieValue, 'encryptSession returned empty').toBeTruthy();
     Cookie = `gh_session_v2=${cookieValue}`;
   });

@@ -22,7 +22,8 @@ jobs:
     #   vars.GLH_STAGING_SERVER           — test Worker host, e.g. lfs-server-staging.<slug>.workers.dev
     #                                       Worker deployed by git-lfs-hub/deploy PRs
     #   secrets.GLH_STAGING_GITHUB_PAT    — GH_PAT: write on TEST_REPO, read:org
-    #   secrets.GLH_STAGING_LOGIN_SECRET  — LOGIN_SECRET matching the staging Worker
+    #   secrets.GLH_STAGING_LOGIN_SECRET  — LOGIN_SECRET matching the staging lfs-server Worker
+    #   secrets.GLH_STAGING_ADMIN_LOGIN_SECRET — LOGIN_SECRET matching the staging lfs-admin Worker
     steps:
       - uses: actions/checkout@v4
 
@@ -54,6 +55,7 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GLH_STAGING_GITHUB_PAT }}
           LOGIN_SECRET: ${{ secrets.GLH_STAGING_LOGIN_SECRET }}
+          ADMIN_LOGIN_SECRET: ${{ secrets.GLH_STAGING_ADMIN_LOGIN_SECRET }}
           PR_NUMBER: ${{ github.event.pull_request.number || 'main' }}
           RUN_ID: ${{ github.run_id }}
           TEST_REPO: ${{ vars.GLH_TEST_REPO }}
