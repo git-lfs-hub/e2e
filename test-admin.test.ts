@@ -30,10 +30,14 @@ describe('e2e admin', () => {
     expect(status, '200 means /api auth is bypassed').toBe(401);
   });
 
-  test('GET /api/me with admin session → 200 + admin login', async () => {
+  test('GET /api/me with admin session → 200 + admin login + scoped orgs', async () => {
     const { status, body } = await req('/api/me', true);
     expect(status, body).toBe(200);
-    expect(JSON.parse(body).admin, 'admin login missing — PAT user not org admin?').toBeTruthy();
+    const me = JSON.parse(body);
+    expect(me.admin, 'admin login missing — PAT user not org admin?').toBeTruthy();
+    // The CI bot is an owner of the throwaway staging org only — never the real org.
+    expect(me.orgs, 'orgs[] missing').toContain('git-lfs-hub-staging');
+    expect(me.orgs, 'bot must not be an admin of the real org').not.toContain('git-lfs-hub');
   });
 
   test('GET /api/repos with admin session → 200 + repos array', async () => {
@@ -46,6 +50,19 @@ describe('e2e admin', () => {
     const { status, body } = await req('/api/storage', true);
     expect(status, body).toBe(200);
     expect(Array.isArray(JSON.parse(body).storage)).toBe(true);
+  });
+
+  // Per-org scoping. Both probes hit `backup`, an inert 501 stub — no side effects, so even a
+  // guard regression can't mutate data on either org.
+  test('mutation on an org the bot admins (staging) passes the owner guard', async () => {
+    const { status, body } = await req('/api/storage/git-lfs-hub-staging/test/backup', true, 'POST');
+    expect(status, body).not.toBe(403); // guard admits; 501 (stub) or 404 (no such prefix)
+    expect([404, 501], body).toContain(status);
+  });
+
+  test('mutation on an org the bot does not admin (git-lfs-hub) → 403', async () => {
+    const { status, body } = await req('/api/storage/git-lfs-hub/test/backup', true, 'POST');
+    expect(status, body).toBe(403);
   });
 
   test('POST /api/reconcile with admin session → 202', async () => {
