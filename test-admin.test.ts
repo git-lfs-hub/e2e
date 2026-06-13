@@ -55,7 +55,11 @@ describe('e2e admin', () => {
   // Per-org scoping. Both probes hit `backup`, an inert 501 stub — no side effects, so even a
   // guard regression can't mutate data on either org.
   test('mutation on an org the bot admins (staging) passes the owner guard', async () => {
-    const { status, body } = await req('/api/storage/git-lfs-hub-staging/test/backup', true, 'POST');
+    const { status, body } = await req(
+      '/api/storage/git-lfs-hub-staging/test/backup',
+      true,
+      'POST',
+    );
     expect(status, body).not.toBe(403); // guard admits; 501 (stub) or 404 (no such prefix)
     expect([404, 501], body).toContain(status);
   });
