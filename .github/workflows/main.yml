@@ -33,15 +33,20 @@ jobs:
 
       - run: bun run lint
 
-      # Minimal vars.json — tests only read title + lfs.server.
+      # Minimal vars.json — tests read lfs.server + github.adminHome.
+      # Admin host derived from the server host (lfs-server-* → lfs-admin-*).
       - name: Write vars.json
         shell: bash
         env:
           GLH_STAGING_SERVER: ${{ vars.GLH_STAGING_SERVER }}
         run: |
           test -n "$GLH_STAGING_SERVER" || { echo "::error::repo GLH_STAGING_SERVER var is not set"; exit 1; }
+          ADMIN_HOST="${GLH_STAGING_SERVER/lfs-server/lfs-admin}"
           cat > vars.json <<EOF
-          { "lfs": { "server": "$GLH_STAGING_SERVER" } }
+          {
+            "lfs": { "server": "$GLH_STAGING_SERVER" },
+            "github": { "adminHome": "https://$ADMIN_HOST" }
+          }
           EOF
 
       - name: Test
