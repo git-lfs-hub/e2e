@@ -4,8 +4,15 @@ import { encryptSession } from '@git-lfs-hub/lib/auth/session';
 
 import { vars, requireEnv } from './lib';
 
-const { GH_PAT, ADMIN_LOGIN_SECRET } = requireEnv('GH_PAT', 'ADMIN_LOGIN_SECRET');
+const { GH_PAT, ADMIN_LOGIN_SECRET, TEST_REPO } = requireEnv(
+  'GH_PAT',
+  'ADMIN_LOGIN_SECRET',
+  'TEST_REPO',
+);
 const BASE_URL = `https://${new URL(vars.github.adminHome).host}`;
+const [STAGING_ORG, TEST_REPO_NAME] = TEST_REPO.split('/'); // bot admins this throwaway org only
+// production org; bot is never an admin here
+const REAL_ORG = (vars.github.orgs?.split(' ')[0] ?? vars.github.org)!;
 
 describe('e2e admin', () => {
   let Cookie: string;
@@ -42,8 +49,8 @@ describe('e2e admin', () => {
     const me = JSON.parse(body);
     expect(me.admin, 'admin login missing — PAT user not org admin?').toBeTruthy();
     // The CI bot is an owner of the throwaway staging org only — never the real org.
-    expect(me.orgs, 'orgs[] missing').toContain('git-lfs-hub-staging');
-    expect(me.orgs, 'bot must not be an admin of the real org').not.toContain('git-lfs-hub');
+    expect(me.orgs, 'orgs[] missing').toContain(STAGING_ORG);
+    expect(me.orgs, 'bot must not be an admin of the real org').not.toContain(REAL_ORG);
   });
 
   test('GET /api/repos with admin session → 200 + repos array', async () => {
@@ -58,20 +65,20 @@ describe('e2e admin', () => {
     expect(Array.isArray(JSON.parse(body).storage)).toBe(true);
   });
 
-  // Per-org scoping. Both probes hit `backup`, an inert 501 stub — no side effects, so even a
-  // guard regression can't mutate data on either org.
+  // Per-org scoping. Both probes hit `backup`. On staging this starts a real backup workflow
+  // (202); the no-admin org is rejected by the guard before any work (403).
   test('mutation on an org the bot admins (staging) passes the owner guard', async () => {
+    const { status, body } = await req(`/api/storage/${TEST_REPO}/backup`, true, 'POST');
+    expect(status, body).not.toBe(403); // guard admits; 202 (started), 404 (no prefix), 409 (busy)
+    expect([202, 404, 409], body).toContain(status);
+  });
+
+  test('mutation on an org the bot does not admin (real org) → 403', async () => {
     const { status, body } = await req(
-      '/api/storage/git-lfs-hub-staging/test/backup',
+      `/api/storage/${REAL_ORG}/${TEST_REPO_NAME}/backup`,
       true,
       'POST',
     );
-    expect(status, body).not.toBe(403); // guard admits; 501 (stub) or 404 (no such prefix)
-    expect([404, 501], body).toContain(status);
-  });
-
-  test('mutation on an org the bot does not admin (git-lfs-hub) → 403', async () => {
-    const { status, body } = await req('/api/storage/git-lfs-hub/test/backup', true, 'POST');
     expect(status, body).toBe(403);
   });
 
