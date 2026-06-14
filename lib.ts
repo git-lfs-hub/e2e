@@ -3,7 +3,11 @@ import { fileURLToPath } from 'node:url';
 
 import { $ } from 'bun';
 
-export type Vars = { title: string; lfs: { server: string }; github: { adminHome: string } };
+export type Vars = {
+  title: string;
+  lfs: { server: string };
+  github: { adminHome: string; orgs?: string; org?: string };
+};
 
 export async function sh(cmd: $.ShellPromise): Promise<$.ShellOutput> {
   const r = await cmd.nothrow().quiet();
