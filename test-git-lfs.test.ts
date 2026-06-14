@@ -1,5 +1,5 @@
 import { $ } from 'bun';
-import { describe, test, expect, beforeAll } from 'vitest';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 
 import { vars, requireEnv, sh } from './lib';
 
@@ -9,10 +9,11 @@ const { GH_PAT, PR_NUMBER, RUN_ID, TEST_REPO } = requireEnv(
   'RUN_ID',
   'TEST_REPO',
 );
+const RUN_ATTEMPT = process.env.RUN_ATTEMPT ?? '1';
 const HOST = vars.lfs.server;
 const LFS_URL = `https://${HOST}/${TEST_REPO}`;
-const BRANCH = `ci/pr-${PR_NUMBER}-${RUN_ID}`;
-const FILE = `ci-${RUN_ID}.bin`;
+const BRANCH = `ci/pr-${PR_NUMBER}-${RUN_ID}-${RUN_ATTEMPT}`;
+const FILE = `ci-${RUN_ID}-${RUN_ATTEMPT}.bin`;
 const COMMIT_MSG = `ci: e2e test PR #${PR_NUMBER} run ${RUN_ID}`;
 const CRED_HELPER = '!f() { echo "username=x-access-token"; echo "password=$GH_PAT"; }; f';
 
@@ -27,6 +28,10 @@ describe('e2e LFS push', () => {
     $.cwd('test-repo');
     await sh($`git config lfs.url ${LFS_URL}`);
     await sh($`git config credential.https://${HOST}.helper ${CRED_HELPER}`);
+  });
+
+  afterAll(async () => {
+    await $`git push origin --delete refs/heads/${BRANCH}`.nothrow().quiet();
   });
 
   test('lfs.url matches vars.lfs.server', async () => {
