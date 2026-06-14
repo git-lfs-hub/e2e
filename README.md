@@ -32,6 +32,7 @@ The workflow takes one input — the caller's existing `GLH_VARS_JSON` — and d
 - **`secrets.TURBO_TOKEN`** → `deploy` job env. Optional Turbo remote cache.
 - **`secrets.GLH_STAGING_GITHUB_PAT`** → `test` job env (`GH_PAT`). Write on `git-lfs-hub/test`; org-mode requires `read:org`.
 - **`secrets.GLH_STAGING_LOGIN_SECRET`** → `test` job env (`LOGIN_SECRET`). Must match `LOGIN_SECRET` Worker secret on `lfs-server-staging`.
+- **`secrets.GLH_STAGING_ADMIN_LOGIN_SECRET`** → `test` job env (`ADMIN_LOGIN_SECRET`). Must match `LOGIN_SECRET` Worker secret on `lfs-admin-staging` (different value from the lfs-server secret).
 
 ### Caller example (`deploy/.github/workflows/pr.yml`)
 
