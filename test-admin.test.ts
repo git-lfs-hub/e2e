@@ -14,6 +14,12 @@ describe('e2e admin', () => {
     const cookieValue = await encryptSession({ access: GH_PAT }, ADMIN_LOGIN_SECRET, 86400);
     expect(cookieValue, 'encryptSession returned empty').toBeTruthy();
     Cookie = `gh_session_v2=${cookieValue}`;
+    // Smoke tests run seconds after CD redeploys; the first request to the REGISTRY DO
+    // races Cloudflare's post-deploy cold start and 500s. Warm it before asserting.
+    for (let i = 0; i < 10; i++) {
+      if ((await req('/api/repos', true)).status < 500) break;
+      await new Promise((r) => setTimeout(r, 500));
+    }
   });
 
   async function req(path: string, withCookie: boolean, method = 'GET') {
